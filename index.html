@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="th" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bingo โภชนาการ</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- Optional SDKs (with fallbacks handled in JS) -->
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body { font-family: 'Kanit', sans-serif; }
+
+    .screen {
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    #startScreen {
+      background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://img2.pic.in.th/Gemini_Generated_Image_3679h53679h53679.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    #gameScreen {
+      position: relative;
+      background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      overflow-y: auto;
+      z-index: 1;
+    }
+
+    #gameScreen::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('https://img2.pic.in.th/Gemini_Generated_Image_3679h53679h53679.png');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.4; /* ตั้งค่าความโปร่งแสง 40% */
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .start-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+      text-align: center;
+    }
+
+    .game-title {
+      font-size: clamp(2.5rem, 5vw, 3.5rem);
+      font-weight: 900;
+      color: white;
+      text-shadow: 4px 4px 0 rgba(0,0,0,0.25);
+      margin: 0;
+      animation: titleBounce 1.2s ease-in-out;
+    }
+
+    .game-subtitle {
+      font-size: clamp(1rem, 2vw, 1.3rem);
+      color: white;
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+      max-width: 500px;
+      line-height: 1.6;
+    }
+
+    .start-btn {
+      padding: 18px 50px;
+      font-size: 1.4rem;
+      font-weight: 800;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #00D4FF, #00A8E8);
+      color: white;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+      font-family: 'Kanit', sans-serif;
+    }
+
+    .start-btn:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    }
+
+    @keyframes titleBounce {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.05) rotate(-2deg); }
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    .bingo-board {
+      background: white;
+      border-radius: 20px;
+      padding: 12px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 550px; /* จำกัดความกว้างให้ตารางเล็กลง */
+      margin: 0 auto; /* จัดกึ่งกลาง */
+      width: 100%;
+    }
+
+    .bingo-header {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+
+    .bingo-letter {
+      text-align: center;
+      font-weight: 900;
+      font-size: clamp(1.1rem, 3vw, 1.6rem);
+      color: white;
+      padding: 8px 4px;
+      border-radius: 8px;
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+    }
+
+    .letter-b { background: #FF6B6B; }
+    .letter-i { background: #FFD93D; }
+    .letter-n { background: #6BCB77; }
+    .letter-g { background: #4D96FF; }
+    .letter-o { background: #FF6BCB; }
+
+    .bingo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+    }
+
+    .bingo-cell {
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4px;
+      font-size: clamp(0.65rem, 2vw, 1.1rem); /* ปรับขนาดตัวอักษรให้พอดีกับช่องตารางใหม่ */
+      font-weight: 700; 
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      background: white;
+      transition: all 0.3s ease;
+      color: #333;
+      line-height: 1.2;
+      width: 100%;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      overflow: hidden; /* ซ่อนส่วนที่เกินออกไปถ้ามี เพื่อให้ตารางไม่เสียรูป */
+    }
+
+    .bingo-cell:hover:not(.incorrect) {
+      transform: scale(1.05);
+      border-color: #666;
+    }
+
+    .bingo-cell.marked {
+      background: linear-gradient(135deg, #FF6B6B, #FFD93D);
+      border-color: #FF6B6B;
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+    }
+
+    .bingo-cell.incorrect {
+      background: white;
+      border-color: #ccc;
+      color: #333;
+      cursor: not-allowed;
+      opacity: 1;
+    }
+
+    .bingo-cell.correct {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      border-color: #27ae60;
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+      animation: correctPulse 0.6s ease-out;
+    }
+
+    @keyframes correctPulse {
+      0% {
+        transform: scale(0.95);
+        opacity: 0.8;
+      }
+      50% {
+        transform: scale(1.08);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .question-section {
+      background: white;
+      border-radius: 25px;
+      padding: 20px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .question-label {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #667EEA;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .lottery-wheel { display: none; }
+    .number-roller { display: none; }
+    .number-item { display: none; }
+    .number-item.highlight { display: none; }
+    .roller-tape { display: none; }
+    .wheel-frame { display: none; }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .game-btn {
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Kanit', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+
+    .spin-btn {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      color: white;
+      padding: 18px 40px !important;
+      font-size: 1.3rem !important;
+      font-weight: 800 !important;
+    }
+
+    .spin-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+    }
+
+    .spin-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .result-card {
+      background: linear-gradient(135deg, #FFE66D, #FFD93D);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 12px;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-question {
+      font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+      line-height: 1.6;
+      color: #333;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .result-answer {
+      font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+      font-weight: 800;
+      color: #FF6B6B;
+      text-align: center;
+      text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+    }
+
+    .confetti {
+      position: fixed;
+      width: 12px;
+      height: 12px;
+      animation: confettiFall 3s ease-in forwards;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    @keyframes confettiFall {
+      0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    .info-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: white;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .info-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+
+    .home-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: white;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .home-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 25px;
+      padding: 30px;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: modalSlideUp 0.4s ease-out;
+      position: relative;
+    }
+
+    @keyframes modalSlideUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #667EEA;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      cursor: pointer;
+      color: #999;
+      transition: all 0.3s ease;
+    }
+
+    .modal-close:hover {
+      color: #333;
+      transform: rotate(90deg);
+    }
+
+    .instructions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .instruction-item {
+      display: flex;
+      gap: 15px;
+      align-items: flex-start;
+    }
+
+    .instruction-number {
+      width: 35px;
+      height: 35px;
+      background: linear-gradient(135deg, #667EEA, #764BA2);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .instruction-text {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #333;
+      font-weight: 500;
+    }
+
+    .instruction-text strong {
+      color: #667EEA;
+      font-weight: 700;
+    }
+
+    /* --- รูปแบบสำหรับหน้าต่างตอนชนะ (BINGO) --- */
+    .bingo-win-content {
+      background: linear-gradient(135deg, #FFE66D, #FF6B6B);
+      border-radius: 30px;
+      padding: 50px 40px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: 8px solid white;
+      max-width: 90%;
+    }
+
+    .bingo-text {
+      font-size: clamp(4rem, 10vw, 6rem);
+      font-weight: 900;
+      color: white;
+      text-shadow: 5px 5px 0 rgba(0,0,0,0.2), 0 0 20px rgba(255,255,255,0.5);
+      margin-bottom: 10px;
+      letter-spacing: 5px;
+      animation: bingoPulse 1s infinite alternate, colorCycle 3s infinite;
+    }
+
+    .bingo-win-subtitle {
+      font-size: 1.5rem;
+      color: white;
+      font-weight: 700;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes bingoPulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.1); }
+    }
+    
+    @keyframes colorCycle {
+      0% { color: #fff; }
+      50% { color: #FFFAEC; }
+      100% { color: #fff; }
+    }
+  </style>
+</head>
+<body class="h-full">
+
+  <!-- Start Screen -->
+  <div id="startScreen" class="screen active">
+    <button class="info-btn" onclick="openInstructions()" title="วิธีเล่น">ℹ️</button>
+    <div class="start-container">
+      <h1 id="gameTitle" class="game-title">🎮 Bingo โภชนาการ</h1>
+      <p class="game-subtitle">เกมเรียนรู้เรื่องพลังงานจากอาหารและธงโภชนาการ</p>
+      <button id="startGameBtn" class="start-btn" onclick="startGame()">
+        <span>🎲</span> <span id="startBtnLabel">เริ่มเกม</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="gameScreen" class="screen">
+    <button class="home-btn" onclick="goToHome()" title="กลับหน้าแรก">🏠</button>
+    <button class="info-btn" onclick="openInstructions()" title="วิธีเล่น" style="position: fixed; top: 20px; right: 20px; z-index: 100;">ℹ️</button>
+    <div class="game-container">
+      
+      <!-- Question Section -->
+      <div class="question-section">
+        <div class="question-label" id="questionLabel">❓ สุ่มคำถาม</div>
+        <div class="lottery-wheel">
+          <div class="wheel-frame"></div>
+          <div id="numberRoller" class="number-roller">
+            <div class="roller-tape" id="rollerTape"></div>
+          </div>
+        </div>
+        <div class="button-group">
+          <button id="spinBtn" class="game-btn spin-btn" onclick="startLottery()">
+            <span>🎲</span> สุ่มคำถาม
+          </button>
+        </div>
+        
+        <!-- Result Display -->
+        <div class="result-card" id="resultCard" style="display: none;">
+          <div class="result-question" id="resultQuestion"></div>
+          <div class="result-answer" id="resultAnswer" style="display: none;"></div>
+        </div>
+      </div>
+
+      <!-- Bingo Board -->
+      <div class="bingo-board">
+        <div class="bingo-header">
+          <div class="bingo-letter letter-b">B</div>
+          <div class="bingo-letter letter-i">I</div>
+          <div class="bingo-letter letter-n">N</div>
+          <div class="bingo-letter letter-g">G</div>
+          <div class="bingo-letter letter-o">O</div>
+        </div>
+        <div class="bingo-grid" id="bingoGrid"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Instructions Modal -->
+  <div id="instructionsModal" class="modal-backdrop">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeInstructions()">✕</button>
+      <div class="modal-header">📖 วิธีการเล่น</div>
+      <div class="instructions-list">
+        <div class="instruction-item">
+          <div class="instruction-number">1</div>
+          <div class="instruction-text"><strong>เลือกบิงโก:</strong> คลิกที่ปุ่ม "เริ่มเกม" เพื่อเข้าเล่น</div>
+        </div>
+        <div class="instruction-item">
+          <div class="instruction-number">2</div>
+          <div class="instruction-text"><strong>สุ่มคำถาม:</strong> กดปุ่ม "🎲 สุ่มคำถาม" เพื่อให้มีการสุ่มคำถามเกี่ยวกับโภชนาการ</div>
+        </div>
+        <div class="instruction-item">
+          <div class="instruction-number">3</div>
+          <div class="instruction-text"><strong>อ่านคำถาม:</strong> ดูคำถามที่ปรากฏใต้ล้อสุ่ม แล้วคิดหาคำตอบที่ถูกต้อง</div>
+        </div>
+        <div class="instruction-item">
+          <div class="instruction-number">4</div>
+          <div class="instruction-text"><strong>ทำเครื่องหมาย:</strong> ถ้าคำตอบที่คุณคิดไว้ตรงกับคำในบัตร ให้คลิกที่ช่องนั้น เพื่อทำเครื่องหมาย</div>
+        </div>
+        <div class="instruction-item">
+          <div class="instruction-number">5</div>
+          <div class="instruction-text"><strong>ชนะการแข่ง:</strong> ทำเครื่องหมายให้ครบแถว แนวตั้ง แนวทแยง หรือทั้งแผ่นเพื่อชนะ!</div>
+        </div>
+        <div class="instruction-item">
+          <div class="instruction-number">💡</div>
+          <div class="instruction-text"><strong>เคล็ด:</strong> ช่องกลางในบัตรบิงโกปกติจะปลอดภัย แต่ในเกมนี้ให้ตรวจสอบให้แน่นอน!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bingo Win Modal -->
+  <div id="bingoModal" class="modal-backdrop">
+    <div class="bingo-win-content">
+      <div class="bingo-text">BINGO!</div>
+      <div class="bingo-win-subtitle">🎉 ยินดีด้วย คุณชนะแล้ว! 🎉</div>
+      <button class="start-btn" onclick="restartGame()">เริ่มเล่นใหม่</button>
+    </div>
+  </div>
+
+  <script>
+    function playBeepSound(frequency = 800, duration = 150) {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioContext.currentTime;
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.frequency.setValueAtTime(frequency, now);
+        osc.frequency.exponentialRampToValueAtTime(frequency * 1.5, now + 1000);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + duration / 1000);
+        osc.start(now);
+        osc.stop(now + duration / 1000);
+      } catch (e) {
+        // Audio not available, fail silently
+      }
+    }
+
+    // แก้ไขคำตอบให้ตรงกับชุดใหม่ทั้งหมด 25 คำ
+    const bingoItems = [
+      ['พลังงาน', 'แคลอรี', 'ข้าวและแป้ง', 'ผัก', 'ไขมัน'],
+      ['อาหารครบ 5 หมู่', 'ธงโภชนาการ', 'อ่อนเพลีย', 'สารอาหารครบ', 'ป้องกันโรค'],
+      ['วิตามิน', 'วัตถุเจือปนอาหาร', 'ปลอดภัย', 'สุขนิสัยการกิน', 'นม'],
+      ['สารกันบูด', 'สดสะอาด', 'กินผักผลไม้', 'เมนูสุขภาพ', 'สีผสมอาหาร'],
+      ['อ่านฉลากอาหาร', 'ดื่มน้ำสะอาด', 'สมดุลพลังงาน', 'สุขภาพดี', 'พลังงานเกิน']
+    ];
+
+    // แก้ไขคำถามและคำตอบใหม่ 25 ข้อ
+    const questionAnswers = [
+      { q: 'สิ่งที่ร่างกายได้รับจากอาหารเพื่อนำไปใช้ทำกิจกรรมต่าง ๆ คืออะไร', a: 'พลังงาน' },
+      { q: 'หน่วยที่ใช้บอกปริมาณพลังงานที่ร่างกายได้รับจากอาหารคืออะไร', a: 'แคลอรี' },
+      { q: 'อาหารประเภทใดเป็นแหล่งพลังงานหลักของร่างกาย เช่น ข้าว ก๋วยเตี๋ยว ขนมปัง', a: 'ข้าวและแป้ง' },
+      { q: 'อาหารประเภทใดให้วิตามินและกากใยอาหารแก่ร่างกาย', a: 'ผัก' },
+      { q: 'สารอาหารประเภทใดให้พลังงานสูงและควรรับประทานแต่น้อย', a: 'ไขมัน' },
+      { q: 'การรับประทานอาหารให้ครบทุกหมวดหมู่ตามหลักโภชนาการเรียกว่าอะไร', a: 'อาหารครบ 5 หมู่' },
+      { q: 'แนวทางแนะนำสัดส่วนการกินอาหารของคนไทยเรียกว่าอะไร', a: 'ธงโภชนาการ' },
+      { q: 'อาการที่เกิดขึ้นเมื่อร่างกายได้รับพลังงานจากอาหารไม่เพียงพอคืออะไร', a: 'อ่อนเพลีย' },
+      { q: 'การรับประทานอาหารหลากหลายช่วยให้ร่างกายได้รับอะไรอย่างครบถ้วน', a: 'สารอาหารครบ' },
+      { q: 'การกินอาหารอย่างถูกต้องช่วยลดความเสี่ยงของการเกิดอะไร', a: 'ป้องกันโรค' },
+      { q: 'สารอาหารที่พบมากในผักและผลไม้และช่วยให้ร่างกายทำงานเป็นปกติคืออะไร', a: 'วิตามิน' },
+      { q: 'สารที่เติมลงในอาหารเพื่อปรับสี กลิ่น หรือรสชาติเรียกว่าอะไร', a: 'วัตถุเจือปนอาหาร' },
+      { q: 'การเลือกอาหารที่ไม่ก่อให้เกิดอันตรายต่อร่างกายเรียกว่าอะไร', a: 'ปลอดภัย' },
+      { q: 'การมีพฤติกรรมการกินที่ดีต่อสุขภาพเรียกว่าอะไร', a: 'สุขนิสัยการกิน' },
+      { q: 'เครื่องดื่มที่ช่วยเสริมสร้างการเจริญเติบโตของเด็กวัยเรียนคืออะไร', a: 'นม' },
+      { q: 'วัตถุเจือปนอาหารชนิดหนึ่งที่ใช้ยืดอายุการเก็บอาหารเรียกว่าอะไร', a: 'สารกันบูด' },
+      { q: 'ลักษณะของอาหารที่เหมาะต่อการบริโภคและดีต่อสุขภาพควรเป็นอย่างไร', a: 'สดสะอาด' },
+      { q: 'การรับประทานอาหารประเภทใดเป็นประจำช่วยให้ร่างกายได้รับวิตามินและใยอาหาร', a: 'กินผักผลไม้' },
+      { q: 'อาหารที่จัดเตรียมโดยคำนึงถึงคุณค่าทางโภชนาการเรียกว่าอะไร', a: 'เมนูสุขภาพ' },
+      { q: 'วัตถุที่ใช้ทำให้อาหารมีสีสันสวยงามเรียกว่าอะไร', a: 'สีผสมอาหาร' },
+      { q: 'การดูข้อมูลส่วนประกอบ วันหมดอายุ และข้อมูลอื่นบนบรรจุภัณฑ์อาหารเรียกว่าอะไร', a: 'อ่านฉลากอาหาร' },
+      { q: 'เครื่องดื่มที่ควรดื่มทุกวันเพื่อช่วยให้ร่างกายทำงานเป็นปกติคืออะไร', a: 'ดื่มน้ำสะอาด' },
+      { q: 'การได้รับพลังงานจากอาหารพอดีกับพลังงานที่ใช้เรียกว่าอะไร', a: 'สมดุลพลังงาน' },
+      { q: 'ภาวะที่ร่างกายแข็งแรงสมบูรณ์ไม่มีโรคภัยเรียกว่าอะไร', a: 'สุขภาพดี' },
+      { q: 'การได้รับพลังงานจากอาหารมากเกินความต้องการของร่างกายเรียกว่าอะไร', a: 'พลังงานเกิน' }
+    ];
+
+    const defaultConfig = {
+      game_title: '🎮 Bingo โภชนาการ',
+      start_button: 'เริ่มเกม'
+    };
+
+    let currentQuestion = null;
+    let currentAnswer = null;
+    let isRolling = false;
+    let isGameOver = false; // ตัวแปรเช็คสถานะเกมจบ
+    let remainingIndices = []; // ชุดเก็บ Index คำถามที่ยังไม่ได้สุ่ม
+
+    function updateQuestionLabel() {
+      const label = document.getElementById('questionLabel');
+      if (label) {
+        label.textContent = `❓ สุ่มคำถาม (เหลือ ${remainingIndices.length} ข้อ)`;
+      }
+    }
+
+    function resetQuestions() {
+      // เติมชุดคำถามให้เต็ม 25 ข้อ
+      remainingIndices = questionAnswers.map((_, index) => index);
+      updateQuestionLabel();
+    }
+
+    function startGame() {
+      document.getElementById('startScreen').classList.remove('active');
+      document.getElementById('gameScreen').classList.add('active');
+      isGameOver = false;
+      document.getElementById('resultCard').style.display = 'none';
+      buildBingoGrid();
+      buildRollerTape();
+      resetQuestions(); // รีเซ็ตคำถามเมื่อเริ่มเกมใหม่
+    }
+
+    function restartGame() {
+      document.getElementById('bingoModal').classList.remove('active');
+      startGame();
+    }
+
+    function goToHome() {
+      // ซ่อนหน้าเกม และแสดงหน้าเริ่มเกม
+      document.getElementById('gameScreen').classList.remove('active');
+      document.getElementById('startScreen').classList.add('active');
+      
+      // รีเซ็ตสถานะปุ่มและการแสดงผลต่างๆ กลับเป็นค่าเริ่มต้น
+      isGameOver = false;
+      isRolling = false;
+      document.getElementById('spinBtn').disabled = false;
+      document.getElementById('resultCard').style.display = 'none';
+      
+      // ลบสถานะข้อความจากสุ่มคำถามเดิม
+      const resultQuestion = document.getElementById('resultQuestion');
+      if(resultQuestion) resultQuestion.textContent = '';
+    }
+
+    // ฟังก์ชันสำหรับสุ่มสลับ Array (Fisher-Yates Shuffle)
+    function shuffleArray(array) {
+      let currentIndex = array.length, randomIndex;
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+      }
+      return array;
+    }
+
+    function buildBingoGrid() {
+      const grid = document.getElementById('bingoGrid');
+      grid.innerHTML = '';
+      
+      // ดึงคำตอบทั้งหมดและทำการสุ่มตำแหน่งใหม่
+      const allAnswers = questionAnswers.map(qa => qa.a);
+      const shuffledAnswers = shuffleArray(allAnswers);
+
+      shuffledAnswers.forEach(item => {
+        const cell = document.createElement('div');
+        cell.className = 'bingo-cell';
+        cell.textContent = item;
+        cell.dataset.answer = item;
+        cell.onclick = function() {
+          handleCellClick(this);
+        };
+        grid.appendChild(cell);
+      });
+    }
+
+    function buildRollerTape() {
+      const tape = document.getElementById('rollerTape');
+      tape.innerHTML = '';
+      for (let cycle = 0; cycle < 3; cycle++) {
+        questionAnswers.forEach((qa, index) => {
+          const item = document.createElement('div');
+          item.className = 'number-item';
+          item.textContent = `ข้อที่ ${index + 1}`;
+          tape.appendChild(item);
+        });
+      }
+    }
+
+    function startLottery() {
+      if (isRolling || isGameOver) return;
+      isRolling = true;
+      document.getElementById('spinBtn').disabled = true;
+
+      // ถ้าสุ่มครบ 25 ข้อแล้ว ให้รีเซ็ตชุดคำถามใหม่
+      if (remainingIndices.length === 0) {
+        resetQuestions();
+      }
+
+      const tape = document.getElementById('rollerTape');
+      
+      // Play spinning sound effect with multiple beeps
+      playBeepSound(1200, 100);
+      setTimeout(() => playBeepSound(1400, 100), 150);
+      setTimeout(() => playBeepSound(1600, 100), 300);
+      setTimeout(() => playBeepSound(1800, 100), 450);
+
+      // สุ่มจาก Index ของคำถามที่ยังเหลืออยู่
+      const randIdx = Math.floor(Math.random() * remainingIndices.length);
+      const selectedNum = remainingIndices[randIdx];
+      
+      // นำข้อที่สุ่มได้ออกจากกล่อง (จะไม่โดนสุ่มซ้ำ)
+      remainingIndices.splice(randIdx, 1);
+      updateQuestionLabel(); // อัปเดตข้อความจำนวนข้อที่เหลือ
+
+      currentQuestion = questionAnswers[selectedNum];
+      currentAnswer = currentQuestion.a;
+
+      const itemHeight = 150;
+      const scrollDistance = itemHeight * questionAnswers.length * 2 + selectedNum * itemHeight;
+
+      tape.style.transition = 'none';
+      tape.style.transform = 'translateY(0)';
+      
+      // trigger reflow
+      void tape.offsetHeight;
+
+      tape.style.transition = 'transform 2.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      tape.style.transform = `translateY(-${scrollDistance}px)`;
+
+      setTimeout(() => {
+        document.querySelectorAll('.number-item').forEach(item => {
+          item.classList.remove('highlight');
+        });
+
+        const items = tape.querySelectorAll('.number-item');
+        const middleIdx = Math.floor(items.length / 2);
+        if(items[middleIdx]) items[middleIdx].classList.add('highlight');
+
+        playBeepSound(500, 200);
+        showResult();
+        launchConfetti();
+
+        isRolling = false;
+        document.getElementById('spinBtn').disabled = false;
+      }, 2600);
+    }
+
+    function showResult() {
+      const resultCard = document.getElementById('resultCard');
+      const resultQuestion = document.getElementById('resultQuestion');
+      const resultAnswer = document.getElementById('resultAnswer');
+      
+      resultQuestion.textContent = `❓ ${currentQuestion.q}`;
+      resultAnswer.style.display = 'none'; // ซ่อนส่วนของคำตอบ
+      
+      resultCard.style.display = 'flex';
+    }
+
+    function handleCellClick(cell) {
+      if (!currentAnswer || isGameOver) return;
+
+      const cellAnswer = cell.dataset.answer;
+      
+      if (cellAnswer === currentAnswer) {
+        cell.classList.add('correct');
+        cell.classList.remove('marked');
+        // Success sound: ascending notes
+        playBeepSound(800, 100);
+        setTimeout(() => playBeepSound(1000, 100), 120);
+        setTimeout(() => playBeepSound(1200, 200), 240);
+
+        // ตรวจสอบว่าชนะแล้วหรือยัง
+        if (checkBingo()) {
+          setTimeout(showBingoWin, 500); // รอจังหวะนิดนึงแล้วแสดงผลชนะ
+        } else {
+          currentAnswer = null; // ป้องกันการกดช่องอื่นซ้ำในข้อเดิม ต้องกดสุ่มใหม่
+        }
+      } else {
+        cell.classList.add('incorrect');
+        // Error sound: descending notes
+        playBeepSound(600, 100);
+        setTimeout(() => playBeepSound(400, 150), 120);
+      }
+    }
+
+    function checkBingo() {
+      const cells = Array.from(document.querySelectorAll('.bingo-cell'));
+      const isCorrect = (index) => cells[index].classList.contains('correct');
+
+      // ตรวจสอบแนวนอน
+      for (let i = 0; i < 5; i++) {
+        if ([0, 1, 2, 3, 4].every(j => isCorrect(i * 5 + j))) return true;
+      }
+      // ตรวจสอบแนวตั้ง
+      for (let i = 0; i < 5; i++) {
+        if ([0, 1, 2, 3, 4].every(j => isCorrect(i + j * 5))) return true;
+      }
+      // ตรวจสอบแนวทแยงมุม
+      if ([0, 6, 12, 18, 24].every(j => isCorrect(j))) return true;
+      if ([4, 8, 12, 16, 20].every(j => isCorrect(j))) return true;
+
+      return false;
+    }
+
+    function playVictorySound() {
+      // เสียงฉลองชัยชนะ
+      playBeepSound(523.25, 150); // โน้ต C5
+      setTimeout(() => playBeepSound(659.25, 150), 150); // โน้ต E5
+      setTimeout(() => playBeepSound(783.99, 150), 300); // โน้ต G5
+      setTimeout(() => playBeepSound(1046.50, 400), 450); // โน้ต C6
+      setTimeout(() => playBeepSound(1046.50, 200), 900); // โน้ต C6
+      setTimeout(() => playBeepSound(1567.98, 600), 1100); // โน้ต G6
+    }
+
+    function showBingoWin() {
+      isGameOver = true;
+      playVictorySound();
+      
+      // ยิงพลุกระดาษรัวๆ 3 ระลอก
+      for(let i=0; i<3; i++) {
+        setTimeout(launchConfetti, i * 800);
+      }
+
+      document.getElementById('bingoModal').classList.add('active');
+    }
+
+    function launchConfetti() {
+      const shapes = ['🎉', '✨', '🌟', '⭐', '🎊', '🎈', '🎀', '🍎', '🥕', '🥛'];
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.fontSize = (Math.random() * 20 + 15) + 'px';
+        confetti.style.animationDelay = Math.random() * 0.5 + 's';
+        confetti.style.animationDuration = (Math.random() * 2 + 2.5) + 's';
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 5000);
+      }
+    }
+
+    function applyConfig(config) {
+      const title = config.game_title || defaultConfig.game_title;
+      const startBtn = config.start_button || defaultConfig.start_button;
+
+      const titleEl = document.getElementById('gameTitle');
+      if (titleEl) titleEl.textContent = title;
+
+      const startLabelEl = document.getElementById('startBtnLabel');
+      if (startLabelEl) startLabelEl.textContent = startBtn;
+    }
+
+    // Safely initialize with SDK if it exists, else use standalone logic
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          applyConfig(config);
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['game_title', config.game_title || defaultConfig.game_title],
+          ['start_button', config.start_button || defaultConfig.start_button]
+        ])
+      });
+    } else {
+      applyConfig(defaultConfig);
+    }
+
+    // Modal controls
+    function openInstructions() {
+      document.getElementById('instructionsModal').classList.add('active');
+    }
+
+    function closeInstructions() {
+      document.getElementById('instructionsModal').classList.remove('active');
+    }
+
+    document.getElementById('instructionsModal').onclick = function(e) {
+      if (e.target === this) {
+        closeInstructions();
+      }
+    };
+  </script>
+</body>
+</html>
