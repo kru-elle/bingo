@@ -535,58 +535,16 @@
 </head>
 <body class="h-full">
 
-  <!-- Datalist for autocomplete -->
-  <datalist id="pastPlayersList"></datalist>
-
   <!-- Start Screen -->
   <div id="startScreen" class="screen active">
     <button class="info-btn" onclick="openInstructions()" title="วิธีเล่น">ℹ️</button>
     <div class="start-container">
       <h1 id="gameTitle" class="game-title">🎮 Bingo โภชนาการ</h1>
       <p class="game-subtitle">เกมเรียนรู้เรื่องพลังงานจากอาหารและธงโภชนาการ</p>
-
-      <!-- Player Form -->
-      <div style="background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border-radius:20px;padding:24px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px;">
-        <div style="display:flex;flex-direction:column;gap:6px;text-align:left;">
-          <label style="color:white;font-weight:700;font-size:0.95rem;">ชื่อผู้เล่น</label>
-          <input id="playerName" type="text" list="pastPlayersList" placeholder="กรอกชื่อ..." autocomplete="off"
-            style="padding:12px 16px;border-radius:12px;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.9);font-family:'Kanit',sans-serif;font-size:1rem;color:#333;outline:none;width:100%;">
-        </div>
-        <div style="display:flex;gap:12px;">
-          <div style="display:flex;flex-direction:column;gap:6px;flex:1;text-align:left;">
-            <label style="color:white;font-weight:700;font-size:0.95rem;">ชั้น</label>
-            <input id="playerClass" type="text" placeholder="เช่น ป.5/1"
-              style="padding:12px 16px;border-radius:12px;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.9);font-family:'Kanit',sans-serif;font-size:1rem;color:#333;outline:none;width:100%;">
-          </div>
-          <div style="display:flex;flex-direction:column;gap:6px;flex:1;text-align:left;">
-            <label style="color:white;font-weight:700;font-size:0.95rem;">เลขที่</label>
-            <input id="playerNumber" type="number" min="1" placeholder="เลขที่"
-              style="padding:12px 16px;border-radius:12px;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.9);font-family:'Kanit',sans-serif;font-size:1rem;color:#333;outline:none;width:100%;">
-          </div>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
-        <button id="startGameBtn" class="start-btn" onclick="startGame()">
-          <span>🎲</span> <span id="startBtnLabel">เริ่มเกม</span>
-        </button>
-        <button class="start-btn" onclick="showDashboard()" style="background:linear-gradient(135deg,#764BA2,#667EEA);">
-          🏆 ดูคะแนน
-        </button>
-      </div>
-
+      <button id="startGameBtn" class="start-btn" onclick="startGame()">
+        <span>🎲</span> <span id="startBtnLabel">เริ่มเกม</span>
+      </button>
     </div>
-  </div>
-
-  <!-- Test Connection Button (fixed bottom-right) -->
-  <div style="position:fixed;bottom:16px;right:16px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-    <div id="testResult" style="display:none;padding:8px 14px;border-radius:10px;font-size:0.78rem;font-weight:600;max-width:280px;text-align:center;word-break:break-all;box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>
-    <button onclick="testConnection()" title="ทดสอบการเชื่อมต่อ Google Sheet"
-      style="background:rgba(0,0,0,0.35);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);padding:6px 12px;border-radius:20px;font-family:'Kanit',sans-serif;font-size:0.72rem;cursor:pointer;transition:all 0.2s;"
-      onmouseover="this.style.color='white';this.style.borderColor='rgba(255,255,255,0.5)'"
-      onmouseout="this.style.color='rgba(255,255,255,0.5)';this.style.borderColor='rgba(255,255,255,0.2)'">
-      🔗 test
-    </button>
   </div>
 
   <!-- Game Screen -->
@@ -666,17 +624,6 @@
     </div>
   </div>
 
-  <!-- Dashboard Modal -->
-  <div id="dashboardModal" class="modal-backdrop" style="z-index:1000;">
-    <div style="background:#1e1b4b;border-radius:25px;padding:30px;width:100%;max-width:860px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);position:relative;">
-      <button onclick="closeDashboard()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;color:white;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;">✕</button>
-      <div style="font-size:1.6rem;font-weight:900;color:white;margin-bottom:20px;">🏆 Ranking</div>
-      <div id="dashboardContent">
-        <div style="text-align:center;color:rgba(255,255,255,0.5);padding:40px;">กำลังโหลด...</div>
-      </div>
-    </div>
-  </div>
-
   <!-- Bingo Win Modal -->
   <div id="bingoModal" class="modal-backdrop">
     <div class="bingo-win-content">
@@ -746,154 +693,14 @@
 
     const defaultConfig = {
       game_title: '🎮 Bingo โภชนาการ',
-      start_button: 'เริ่มเกม',
-      sheet_url: 'https://script.google.com/macros/s/AKfycbwu6DMQOjB_vpAxIF2K0fMjzoBEqwbAYoJPBzeizBLQhsGHCLkQ2L4lQTT2qkeFpWqH0w/exec'
+      start_button: 'เริ่มเกม'
     };
 
     let currentQuestion = null;
     let currentAnswer = null;
     let isRolling = false;
-    let isGameOver = false;
-    let remainingIndices = [];
-    let playerName = '';
-    let playerClass = '';
-    let playerNumber = '';
-    let questionsUsed = 0;
-    let gameEnded = false;
-
-    let SHEET_URL = defaultConfig.sheet_url;
-
-    async function testConnection() {
-      const el = document.getElementById('testResult');
-      el.style.display = 'block';
-      el.style.background = 'rgba(255,255,255,0.15)';
-      el.style.color = 'white';
-      el.textContent = '⏳ กำลังทดสอบ...';
-
-      if (!SHEET_URL || SHEET_URL.includes('YOUR_SCRIPT_ID')) {
-        el.style.background = 'rgba(239,68,68,0.3)';
-        el.style.color = '#fca5a5';
-        el.textContent = '❌ ยังไม่ได้ตั้งค่า Sheet URL';
-        return;
-      }
-
-      try {
-        const res = await fetch(`${SHEET_URL}?action=get_rankings`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        el.style.background = 'rgba(34,197,94,0.25)';
-        el.style.color = '#86efac';
-        el.textContent = `✅ เชื่อมต่อสำเร็จ! มีข้อมูล ${data.data?.length || 0} รายการ`;
-
-        // ทดสอบ save ด้วย dummy row
-        const params = new URLSearchParams({
-          action: 'save',
-          name: 'TEST_CONNECTION',
-          cls: '-', num: '-', questions: 0, correct: 0, status: 'ทดสอบ'
-        });
-        await fetch(`${SHEET_URL}?${params}`, { method: 'GET', mode: 'no-cors' });
-        el.textContent += ' | บันทึกทดสอบแล้ว ✔';
-      } catch (err) {
-        el.style.background = 'rgba(239,68,68,0.3)';
-        el.style.color = '#fca5a5';
-        el.textContent = `❌ เชื่อมต่อไม่ได้: ${err.message}`;
-      }
-    }
-
-    async function saveToSheet() {
-      if (!SHEET_URL || SHEET_URL.includes('YOUR_SCRIPT_ID')) return;
-      const cells = Array.from(document.querySelectorAll('.bingo-cell'));
-      const correctMarks = cells.filter(c => c.classList.contains('correct')).length;
-      const params = new URLSearchParams({
-        action: 'save',
-        name: playerName || 'ไม่ระบุ',
-        cls: playerClass || '-',
-        num: playerNumber || '-',
-        questions: questionsUsed,
-        correct: correctMarks,
-        status: 'BINGO!'
-      });
-      try {
-        await fetch(`${SHEET_URL}?${params}`, { method: 'GET', mode: 'no-cors' });
-      } catch (e) {}
-    }
-
-    async function loadPastPlayers() {
-      if (!SHEET_URL || SHEET_URL.includes('YOUR_SCRIPT_ID')) return;
-      try {
-        const res = await fetch(`${SHEET_URL}?action=get_players`);
-        const data = await res.json();
-        const dl = document.getElementById('pastPlayersList');
-        dl.innerHTML = '';
-        (data.players || []).forEach(n => {
-          const opt = document.createElement('option');
-          opt.value = n;
-          dl.appendChild(opt);
-        });
-      } catch (e) {}
-    }
-
-    async function showDashboard(backTo) {
-      document.getElementById('dashboardModal').classList.add('active');
-      await loadRankings();
-    }
-
-    function closeDashboard() {
-      document.getElementById('dashboardModal').classList.remove('active');
-    }
-
-    async function loadRankings() {
-      const el = document.getElementById('dashboardContent');
-      if (!SHEET_URL || SHEET_URL.includes('YOUR_SCRIPT_ID')) {
-        el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.5);padding:40px;">กรุณาตั้งค่า Sheet URL ก่อน</div>';
-        return;
-      }
-      try {
-        const res = await fetch(`${SHEET_URL}?action=get_rankings`);
-        const data = await res.json();
-        const rows = data.data || [];
-        if (!rows.length) {
-          el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.5);padding:40px;">ยังไม่มีข้อมูล</div>';
-          return;
-        }
-        // Schema: [date(0), name(1), cls(2), num(3), questions(4), correct(5), status(6)]
-        const sorted = [...rows].sort((a, b) => (a[4]||99) - (b[4]||99));
-        el.innerHTML = `
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
-              <thead>
-                <tr style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);">
-                  <th style="padding:10px 12px;text-align:center;">อันดับ</th>
-                  <th style="padding:10px 12px;text-align:left;">ชื่อ</th>
-                  <th style="padding:10px 12px;text-align:center;">ชั้น</th>
-                  <th style="padding:10px 12px;text-align:center;">เลขที่</th>
-                  <th style="padding:10px 12px;text-align:center;">ข้อที่ใช้</th>
-                  <th style="padding:10px 12px;text-align:center;">ตอบถูก</th>
-                  <th style="padding:10px 12px;text-align:center;">สถานะ</th>
-                  <th style="padding:10px 12px;text-align:center;">วันที่</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${sorted.map((r, i) => `
-                  <tr style="border-top:1px solid rgba(255,255,255,0.07);${i%2===0?'background:rgba(255,255,255,0.03)':''}">
-                    <td style="padding:10px 12px;text-align:center;color:${i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'rgba(255,255,255,0.6)'};">
-                      ${i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`}
-                    </td>
-                    <td style="padding:10px 12px;font-weight:600;color:white;">${r[1]||'-'}</td>
-                    <td style="padding:10px 12px;text-align:center;color:rgba(255,255,255,0.7);">${r[2]||'-'}</td>
-                    <td style="padding:10px 12px;text-align:center;color:rgba(255,255,255,0.7);">${r[3]||'-'}</td>
-                    <td style="padding:10px 12px;text-align:center;color:#60a5fa;font-weight:700;">${r[4]||'-'}</td>
-                    <td style="padding:10px 12px;text-align:center;color:#4ade80;font-weight:700;">${r[5]||'-'}</td>
-                    <td style="padding:10px 12px;text-align:center;"><span style="background:rgba(74,222,128,0.2);color:#4ade80;padding:2px 10px;border-radius:20px;font-size:0.8rem;">${r[6]||'-'}</span></td>
-                    <td style="padding:10px 12px;text-align:center;color:rgba(255,255,255,0.5);font-size:0.8rem;">${r[0]||'-'}</td>
-                  </tr>`).join('')}
-              </tbody>
-            </table>
-          </div>`;
-      } catch (e) {
-        el.innerHTML = '<div style="text-align:center;color:#f87171;padding:40px;">โหลดข้อมูลไม่สำเร็จ</div>';
-      }
-    }
+    let isGameOver = false; // ตัวแปรเช็คสถานะเกมจบ
+    let remainingIndices = []; // ชุดเก็บ Index คำถามที่ยังไม่ได้สุ่ม
 
     function updateQuestionLabel() {
       const label = document.getElementById('questionLabel');
@@ -909,18 +716,13 @@
     }
 
     function startGame() {
-      playerName = document.getElementById('playerName').value.trim();
-      playerClass = document.getElementById('playerClass').value.trim();
-      playerNumber = document.getElementById('playerNumber').value.trim();
-      questionsUsed = 0;
-      gameEnded = false;
       document.getElementById('startScreen').classList.remove('active');
       document.getElementById('gameScreen').classList.add('active');
       isGameOver = false;
       document.getElementById('resultCard').style.display = 'none';
       buildBingoGrid();
       buildRollerTape();
-      resetQuestions();
+      resetQuestions(); // รีเซ็ตคำถามเมื่อเริ่มเกมใหม่
     }
 
     function restartGame() {
@@ -1009,9 +811,10 @@
       // สุ่มจาก Index ของคำถามที่ยังเหลืออยู่
       const randIdx = Math.floor(Math.random() * remainingIndices.length);
       const selectedNum = remainingIndices[randIdx];
+      
+      // นำข้อที่สุ่มได้ออกจากกล่อง (จะไม่โดนสุ่มซ้ำ)
       remainingIndices.splice(randIdx, 1);
-      questionsUsed++;
-      updateQuestionLabel();
+      updateQuestionLabel(); // อัปเดตข้อความจำนวนข้อที่เหลือ
 
       currentQuestion = questionAnswers[selectedNum];
       currentAnswer = currentQuestion.a;
@@ -1115,10 +918,6 @@
 
     function showBingoWin() {
       isGameOver = true;
-      if (!gameEnded) {
-        gameEnded = true;
-        saveToSheet();
-      }
       playVictorySound();
       
       // ยิงพลุกระดาษรัวๆ 3 ระลอก
@@ -1161,8 +960,6 @@
         defaultConfig,
         onConfigChange: async (config) => {
           applyConfig(config);
-          if (config.sheet_url) SHEET_URL = config.sheet_url;
-          loadPastPlayers();
         },
         mapToCapabilities: (config) => ({
           recolorables: [],
@@ -1177,7 +974,6 @@
       });
     } else {
       applyConfig(defaultConfig);
-      loadPastPlayers();
     }
 
     // Modal controls
@@ -1190,11 +986,9 @@
     }
 
     document.getElementById('instructionsModal').onclick = function(e) {
-      if (e.target === this) closeInstructions();
-    };
-
-    document.getElementById('dashboardModal').onclick = function(e) {
-      if (e.target === this) closeDashboard();
+      if (e.target === this) {
+        closeInstructions();
+      }
     };
   </script>
 </body>
